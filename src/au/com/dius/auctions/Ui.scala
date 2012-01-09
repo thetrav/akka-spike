@@ -42,7 +42,7 @@ object Ui {
 	  menuBar.add(menu)
 	  menuItem(menu, "AuctionHouse", e => createAuctionHouse)
 	  menuItem(menu, "Vendor", e => createVendor)
-	  
+	  //made a change
 	  frame.setVisible(true)
 	}
 	
