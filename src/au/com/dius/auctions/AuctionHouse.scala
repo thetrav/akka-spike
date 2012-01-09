@@ -18,9 +18,10 @@ class AuctionHouse extends Actor {
       val auction = Actor.actorOf(
           new Auction(key, minimum, description, self))
           .start()
-      
+      println("created auction")
       auctions += key -> auction
       auction ! Open
+      println("returning auction")
       self.reply(auction)
     }
     case Sold(key, amount, buyer) => {

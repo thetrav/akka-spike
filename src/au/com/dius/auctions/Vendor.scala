@@ -8,6 +8,12 @@ class Vendor(auctionHouse:ActorRef) extends Actor {
   def receive = {
     case c:Create => auctionHouse ! c
     case a:ActorRef => auction = Some(a)
-    case Close => if(auction.isEmpty) self ! Close else auction.get ! Close
+    case Close => if(auction.isEmpty) {
+      println("haven't got an auction yet")
+      self ! Close
+    } else {
+      println("closing")
+      auction.get ! Close
+    }
   }
 }

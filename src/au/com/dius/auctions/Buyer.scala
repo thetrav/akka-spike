@@ -12,6 +12,7 @@ class Buyer(name:String, auctionHouse:ActorRef) extends Actor {
         auctionHouse ! ListAuctions
         self ! bidAmount
       } else {
+        println("bidding "+bidAmount)
         myAuctions.head ! Bid(bidAmount, self)
       }
     }
