@@ -90,26 +90,6 @@ object Ui {
 	def createVendor() {
 	  val vendor = Actor.actorOf(new Vendor(auctionHouse)).start()
 
-	  val frame = newFrame("Vendor")
-	  val menuBar = new JMenuBar()
-	  frame.setJMenuBar(menuBar)
-	  val panel = new JPanel()
-	  frame.getContentPane().add(new JScrollPane(panel))
-	  menuItem(menuBar, "new Sale", e => {
-	    val description = JOptionPane.showInputDialog("enter item description")
-	    val minimum = Integer.parseInt(JOptionPane.showInputDialog("enter minimum bid"))
-	    vendor ? Create(minimum, description)
-	    val row = new JPanel()
-	    row.add(new JLabel(description))
-	    val b = new JButton("end")
-	    row.add(b)
-	    panel.add(row)
-	    frame.invalidate()
-	    frame.validate()
-	    frame.repaint()
-	    action(b, e => { vendor ? Close })
-	  })
-	  
-	  frame.setVisible(true)
+	  new VendorUi(vendor).init()
 	}
 }
