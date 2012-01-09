@@ -16,7 +16,7 @@ import scala.collection.immutable.MapLike
 
 case class BidOn(amount: Int, auction: String)
 
-class Buyer(name: String, auctionHouse: ActorRef) extends Actor {
+class Buyer(key:String, name: String, auctionHouse: ActorRef) extends Actor {
   var myAuctions: Map[String, ActorRef] = Map()
 
   def receive = {
@@ -29,7 +29,7 @@ class Buyer(name: String, auctionHouse: ActorRef) extends Actor {
      myAuctions = auctions
     }
     case BidOn(amount: Int, auction: String) => {
-      myAuctions(auction) ! Bid(amount, self)
+      myAuctions(auction) ! Bid(amount, name, self)
     }
   }
 }

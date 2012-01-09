@@ -82,14 +82,17 @@ object Ui {
 	
 	def createBuyer() {
 	  val name = JOptionPane.showInputDialog("Enter Buyer Name")
-	  val buyer = Actor.actorOf(new Buyer(name, auctionHouse)).start()
-	  
-	  new BuyerUi(buyer).init()
+	  val future = auctionHouse ? RegisterBuyer(name)
+	  future.onResult {
+	    case (key:String, buyer:ActorRef) => new BuyerUi(buyer).init() 
+	  }
 	}
 	
 	def createVendor() {
-	  val vendor = Actor.actorOf(new Vendor(auctionHouse)).start()
-
-	  new VendorUi(vendor).init()
+	  val name = JOptionPane.showInputDialog("Enter Vendor Name")
+	  val future = auctionHouse ? RegisterVendor(name)
+	  future.onResult {
+	    case (key:String, vendor:ActorRef) => new VendorUi(vendor).init() 
+	  }
 	}
 }

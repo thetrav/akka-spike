@@ -9,17 +9,19 @@ class Auction(id:String,
   //first bid can be minimum
   var currentAmount:Int = minimum-1 
   var currentBuyer:Option[ActorRef] = None
+  var currentName:Option[String] = None
   
   def receive = {
     case Open => None
-    case Bid(newAmount:Int, newBuyer:ActorRef) => {
+    case Bid(newAmount:Int, newName:String, newBuyer:ActorRef) => {
       if(newAmount > currentAmount) {
         currentAmount = newAmount
         currentBuyer = Some(newBuyer)
+        currentName = Some(newName)
       }
     }
     case Close => {
-      auctionHouse ! Sold(id, currentAmount, currentBuyer.map( _.toString()))
+      auctionHouse ! Sold(id, currentAmount, currentName)
       self.stop()
     }
   }

@@ -10,14 +10,13 @@ import javax.swing.JLabel
 import javax.swing.JButton
 import javax.swing.BoxLayout
 
-
-class Vendor(auctionHouse:ActorRef) extends Actor {
+class Vendor(id:String, name:String, auctionHouse:ActorRef) extends Actor {
   var auctions = Map[String, ActorRef]()
   
   def receive = {
-    case "getAuctions" => println("auctions:"+auctions); self.reply(auctions.keys)
-    case c:Create => auctionHouse ! c
-    case (k:String, a:ActorRef) => println("got new one"+k); auctions += k -> a
+    case "getAuctions" => self.reply(auctions.keys)
+    case c:RegisterAuction => auctionHouse ! c
+    case (k:String, a:ActorRef) => auctions += k -> a
     case Close(key) => auctions(key) ! Close 
   }
 }
@@ -53,7 +52,7 @@ class VendorUi(vendor:ActorRef) {
     menuItem(menuBar, "new Sale", e => {
       val description = JOptionPane.showInputDialog("enter item description")
       val minimum = Integer.parseInt(JOptionPane.showInputDialog("enter minimum bid"))
-      vendor ? Create(minimum, description)
+      vendor ? RegisterAuction(minimum, description)
       refresh()
     })
     
