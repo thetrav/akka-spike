@@ -12,11 +12,22 @@ import javax.swing.JScrollPane
 import javax.swing.AbstractButton
 import java.awt.Container
 import javax.swing.JOptionPane
+import javax.swing.JPanel
+import javax.swing.JLabel
+import javax.swing.JButton
+import javax.swing.JComboBox
+import javax.swing.JTextField
+import akka.actor.ActorRef
 
 object Ui {
-	val auctionHouse = new AuctionHouse()
-    val auctionHouseActor = Actor.actorOf(auctionHouse).start()
-  
+    val auctionHouse = Actor.actorOf[AuctionHouse].start()
+
+    def repaint(frame:JFrame) {
+      frame.invalidate()
+      frame.validate()
+      frame.repaint()
+    }
+    
     def action(b:AbstractButton, a:ActionEvent => Any) {
       b.addActionListener(new ActionListener{ 
         def actionPerformed(e:ActionEvent){
@@ -33,18 +44,34 @@ object Ui {
   
 	def main(args:Array[String]) {
 	  val frame = new JFrame("auction")
-	  frame.setSize(800,600)
+	  frame.setSize(500,100)
 	  frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
 	  
-	  val menuBar = new JMenuBar()
-	  frame.setJMenuBar(menuBar)
-	  val menu = new JMenu("create")
-	  menuBar.add(menu)
-	  menuItem(menu, "AuctionHouse", e => createAuctionHouse)
+	  val text = new JTextArea()
+	  frame.getContentPane().add(new JScrollPane(text))
+	  
+	  val menu = new JMenuBar()
+	  frame.setJMenuBar(menu)
+	  
+	  menuItem(menu, "Refresh", e => {
+	    val future = auctionHouse ? ListAuctions
+	    future.onResult {
+	      case m:Map[String, ActorRef] => {
+	        var s = ""
+	        m.keys.foreach( key => {
+	          s += "\t" + key + "\n"
+	        })
+	        text.setText(s)
+	        repaint(frame)
+	      } 
+	    }
+	  })
 	  menuItem(menu, "Vendor", e => createVendor)
+	  menuItem(menu, "Buyer", e => createBuyer)
 	  //made a change
 	  frame.setVisible(true)
 	}
+	
 	
 	def newFrame(name:String) = {
 	  val frame = new JFrame(name)
@@ -53,34 +80,19 @@ object Ui {
 	  frame
 	}
 	
-	def createVendor() {
-//	  val name = JOptionPanel.showInputDialog("enter name")
-	  val frame = newFrame("Vendor")
-	  val menuBar = new JMenuBar()
-	  frame.setJMenuBar(menuBar)
-//	  JLabel name = 
-	  
+	def createBuyer() {
+	  val name = JOptionPane.showInputDialog("Enter Buyer Name")
+	  val future = auctionHouse ? RegisterBuyer(name)
+	  future.onResult {
+	    case (key:String, buyer:ActorRef) => new BuyerUi(buyer).init() 
+	  }
 	}
 	
-	def createAuctionHouse() {
-	  val frame = newFrame("AuctionHouse")
-	  
-	  
-	  
-	  val text = new JTextArea()
-	  
-	  frame.getContentPane().add(new JScrollPane(text))
-	  
-	  val menuBar = new JMenuBar()
-	  frame.setJMenuBar(menuBar)
-	  menuItem(menuBar, "refresh", e => {
-	    var s = ""
-	    auctionHouse.auctions.foreach( t => s += t._1 + "\t" + t._2+" \n")
-	    text.setText(s)
-	    frame.invalidate()
-	    frame.repaint()
-	  })
-	  
-	  frame.setVisible(true)
+	def createVendor() {
+	  val name = JOptionPane.showInputDialog("Enter Vendor Name")
+	  val future = auctionHouse ? RegisterVendor(name)
+	  future.onResult {
+	    case (key:String, vendor:ActorRef) => new VendorUi(vendor).init() 
+	  }
 	}
 }
