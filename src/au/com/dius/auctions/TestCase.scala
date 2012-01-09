@@ -10,7 +10,7 @@ object TestCase {
 	  buyer ! 100
 	  (1 to 5).foreach(arg => {
 		  Thread.sleep(5)
-		  Yielder.hangout()		  
+		  //Yielder.hangout()		  
 	  })
 	  vendor ! Close
   }
