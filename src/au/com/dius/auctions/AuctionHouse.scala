@@ -4,6 +4,7 @@ import akka.actor.ActorRef
 
 class AuctionHouse extends Actor {
   var auctions = Map[String, ActorRef]()
+  var oldAuctions = List[(String, Int, Option[String])]()
   var sequence = 1
   
   def nextId = {
@@ -18,18 +19,17 @@ class AuctionHouse extends Actor {
       val auction = Actor.actorOf(
           new Auction(key, minimum, description, self))
           .start()
-      println("created auction")
       auctions += key -> auction
       auction ! Open
-      println("returning auction")
       self.reply(auction)
     }
     case Sold(key, amount, buyer) => {
-      println("sold "+auctions(key)+" for " + amount + " to " + buyer)
+      val auction = auctions(key)
+      oldAuctions = (key, amount, buyer) :: oldAuctions
+      auctions -= key
     }
     case ListAuctions => {
-      self.reply(auctions.values)
+      self.reply(auctions)
     }
   }
-  
 }

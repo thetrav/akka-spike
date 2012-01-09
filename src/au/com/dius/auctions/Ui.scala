@@ -17,10 +17,17 @@ import javax.swing.JLabel
 import javax.swing.JButton
 import javax.swing.JComboBox
 import javax.swing.JTextField
+import akka.actor.ActorRef
 
 object Ui {
-    val auctionHouse = Actor.actorOf(new AuctionHouse()).start()
-  
+    val auctionHouse = Actor.actorOf[AuctionHouse].start()
+
+    def repaint(frame:JFrame) {
+      frame.invalidate()
+      frame.validate()
+      frame.repaint()
+    }
+    
     def action(b:AbstractButton, a:ActionEvent => Any) {
       b.addActionListener(new ActionListener{ 
         def actionPerformed(e:ActionEvent){
@@ -40,14 +47,31 @@ object Ui {
 	  frame.setSize(500,100)
 	  frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE)
 	  
+	  val text = new JTextArea()
+	  frame.getContentPane().add(new JScrollPane(text))
+	  
 	  val menu = new JMenuBar()
 	  frame.setJMenuBar(menu)
-	  menuItem(menu, "AuctionHouse", e => showAuctionHouse)
+	  
+	  menuItem(menu, "Refresh", e => {
+	    val future = auctionHouse ? ListAuctions
+	    future.onResult {
+	      case m:Map[String, ActorRef] => {
+	        var s = ""
+	        m.keys.foreach( key => {
+	          s += "\t" + key + "\n"
+	        })
+	        text.setText(s)
+	        repaint(frame)
+	      } 
+	    }
+	  })
 	  menuItem(menu, "Vendor", e => createVendor)
 	  menuItem(menu, "Buyer", e => createBuyer)
 	  //made a change
 	  frame.setVisible(true)
 	}
+	
 	
 	def newFrame(name:String) = {
 	  val frame = new JFrame(name)
@@ -60,28 +84,7 @@ object Ui {
 	  val name = JOptionPane.showInputDialog("Enter Buyer Name")
 	  val buyer = Actor.actorOf(new Buyer(name, auctionHouse)).start()
 	  
-	  val frame = newFrame("Vendor")
-	  val menuBar = new JMenuBar()
-	  frame.setJMenuBar(menuBar)
-	  
-	  val pane = new JPanel()
-	  frame.getContentPane().add(pane)
-	  val auctionCombo = new JComboBox()
-	  pane.add(auctionCombo)
-	  
-	  val amount = new JTextField("100")
-	  pane.add(amount)
-	  
-	  val b = new JButton("Bid")
-	  pane.add(b)
-	  action(b, e=>{
-	    buyer ! Integer.parseInt(amount.getText())
-	  })
-	  
-	  menuItem(menuBar, "update", e => {
-	    
-	  })
-	  frame.setVisible(true)
+	  new BuyerUi(buyer).init()
 	}
 	
 	def createVendor() {
@@ -95,7 +98,7 @@ object Ui {
 	  menuItem(menuBar, "new Sale", e => {
 	    val description = JOptionPane.showInputDialog("enter item description")
 	    val minimum = Integer.parseInt(JOptionPane.showInputDialog("enter minimum bid"))
-	    vendor !! Create(minimum, description)
+	    vendor ? Create(minimum, description)
 	    val row = new JPanel()
 	    row.add(new JLabel(description))
 	    val b = new JButton("end")
@@ -104,25 +107,7 @@ object Ui {
 	    frame.invalidate()
 	    frame.validate()
 	    frame.repaint()
-	    action(b, e => { vendor !! Close })
-	  })
-	  
-	  frame.setVisible(true)
-	}
-	
-	def showAuctionHouse() {
-	  val frame = newFrame("AuctionHouse")
-	  val text = new JTextArea()
-	  
-	  frame.getContentPane().add(new JScrollPane(text))
-	  
-	  val menuBar = new JMenuBar()
-	  frame.setJMenuBar(menuBar)
-	  menuItem(menuBar, "refresh", e => {
-	    val result = (auctionHouse !! ListAuctions).toString() 
-	    text.setText(result)
-	    frame.invalidate()
-	    frame.repaint()
+	    action(b, e => { vendor ? Close })
 	  })
 	  
 	  frame.setVisible(true)

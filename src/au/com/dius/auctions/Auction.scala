@@ -19,7 +19,7 @@ class Auction(id:String,
       }
     }
     case Close => {
-      auctionHouse ! Sold(id, currentAmount, currentBuyer)
+      auctionHouse ! Sold(id, currentAmount, currentBuyer.map( _.toString()))
       self.stop()
     }
   }
