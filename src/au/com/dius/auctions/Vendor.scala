@@ -16,8 +16,9 @@ class Vendor(id:String, name:String, auctionHouse:ActorRef) extends Actor {
   def receive = {
     case "getAuctions" => self.reply(auctions.keys)
     case c:RegisterAuction => auctionHouse ! c
-    case (k:String, a:ActorRef) => auctions += k -> a
-    case Close(key) => auctions(key) ! Close 
+    case a:ActorAddress => auctions += a.key -> a.actorRef
+    case Close(key) => auctions(key) ! Close
+    case "CloseAll" => auctions.values.foreach(a => a ! Close); auctions = Map()
   }
 }
 
