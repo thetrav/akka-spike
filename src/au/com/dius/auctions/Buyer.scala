@@ -26,7 +26,7 @@ class Buyer(key:String, name: String, auctionHouse: ActorRef) extends Actor {
       self.reply(myAuctions.keys)
     }
     case auctions: Map[String, ActorRef] => {
-     myAuctions = auctions
+      myAuctions = auctions
     }
     case BidOn(amount: Int, auction: String) => {
       myAuctions(auction) ! Bid(amount, name, self)

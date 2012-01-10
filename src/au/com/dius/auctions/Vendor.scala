@@ -14,6 +14,7 @@ class Vendor(id:String, name:String, auctionHouse:ActorRef) extends Actor {
   var auctions = Map[String, ActorRef]()
   
   def receive = {
+    case "getName" => self.reply(name)
     case "getAuctions" => self.reply(auctions.keys)
     case c:RegisterAuction => auctionHouse ! c
     case (k:String, a:ActorRef) => auctions += k -> a
@@ -23,8 +24,9 @@ class Vendor(id:String, name:String, auctionHouse:ActorRef) extends Actor {
 
 class VendorUi(vendor:ActorRef) {
   def init() {
-    val frame = newFrame("Vendor")
-    val menuBar = new JMenuBar()
+    val name: String = (vendor !! "getName").toString()
+    val frame = newFrame(name)
+	val menuBar = new JMenuBar()
     frame.setJMenuBar(menuBar)
     val panel = new JPanel()
     panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS))
@@ -49,7 +51,7 @@ class VendorUi(vendor:ActorRef) {
       }
     }
     
-    menuItem(menuBar, "new Sale", e => {
+    menuItem(menuBar, "new Auction", e => {
       val description = JOptionPane.showInputDialog("enter item description")
       val minimum = Integer.parseInt(JOptionPane.showInputDialog("enter minimum bid"))
       vendor ? RegisterAuction(minimum, description)

@@ -40,5 +40,8 @@ class AuctionHouse extends Actor {
     case ListAuctions => {
       self.reply(auctions)
     }
+    case ListOldAuctions => {
+      self.reply(oldAuctions)
+    }
   }
 }

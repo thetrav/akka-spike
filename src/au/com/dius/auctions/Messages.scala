@@ -9,3 +9,5 @@ case class RegisterAuction(minimum:Int, description:String)
 case class RegisterVendor(name:String)
 case class RegisterBuyer(name:String)
 case class ListAuctions
+case class ListOldAuctions
+case class Status

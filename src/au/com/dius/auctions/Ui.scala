@@ -57,13 +57,13 @@ object Ui {
 	    val future = auctionHouse ? ListAuctions
 	    future.onResult {
 	      case m:Map[String, ActorRef] => {
-	        var s = ""
-	        m.keys.foreach( key => {
-	          s += "\t" + key + "\n"
-	        })
+	        var s = "Open Auctions:\n"
+	        m.values.foreach( auction => {
+	          s += "\t" + (auction !! Status).toString() + "\n"
+	        } )
 	        text.setText(s)
 	        repaint(frame)
-	      } 
+	      }
 	    }
 	  })
 	  menuItem(menu, "Vendor", e => createVendor)
