@@ -32,9 +32,8 @@ class Buyer(key: String, name: String, auctionHouse: ActorRef) extends Actor {
 	      self ! BidOn(bid.toInt, key)
       }
     }
-    case auctions: Iterable[ActorAddress] => {
-      val f = (i: ActorAddress) => (i.key, i)
-      myAuctions = auctions.map(f).toMap
+    case auctions: List[ActorAddress] => {
+      myAuctions = auctions.map((i:ActorAddress) => (i.key, i)).toMap
     }
     case BidOn(amount: Int, auction: String) => {
       myAuctions(auction).actorRef ! Bid(amount, name, self)

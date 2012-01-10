@@ -26,6 +26,9 @@ class AuctionHouse extends Actor {
     case ListAuctions => {
       self.reply(auctions.values.toList)
     }
+    case ListOldAuctions => {
+      self.reply(oldAuctions)
+    }
   }
   
   override def preStart() = {

@@ -18,23 +18,58 @@ object ThroughputTest {
     frame.getContentPane().add(new JScrollPane(text))
 
     val vendorDriver = Actor.actorOf[VendorDriver].start()
-    
-    vendorDriver ! AddTestVendor("First")
-    vendorDriver ! AddTestVendor("Second")
-    vendorDriver ! AddTestVendor("Third")
-    
+
+    (1 to 100).foreach (i => {
+    	vendorDriver ! AddTestVendor("Vendor"+i)
+    })
+
     val buyerDriver = Actor.actorOf[BuyerDriver].start()
     
-    buyerDriver ! AddTestBuyer("Harry")
-    buyerDriver ! AddTestBuyer("Larry")
-    buyerDriver ! AddTestBuyer("Garry")
+    val firstNames = List("Travis","John","Alan", "Tony", "Martin", "Simon", "Luke", "John", "Tim", "Michael")
+    val lastNames = List("Dixon", "Fowler", "Jones", "Alberts", "Kroft", "Peyton Jones", "Moris", "Eisenhower", "Kennedy", "Obama")
+    (0 to 9).foreach (i => {
+      (0 to 9).foreach (j => {
+	    buyerDriver ! AddTestBuyer(firstNames(i)+" "+lastNames(j))
+	    })
+    })
+    val refresher = Actor.actorOf(new ScreenRefresher(frame, text)).start()
+    refresher ! "REFRESH"
     
     frame.setVisible(true)
   }
 }
 
+class ScreenRefresher(frame: JFrame, text: JTextArea) extends Actor {
+  val auctionHouse = Actor.remote.actorFor("auctionHouse", "localhost", 2555)
+
+  def receive = {
+    case _ => {
+      println("refreshing")
+      val f1 = auctionHouse ? ListAuctions
+      f1.onResult {
+        case l: List[ActorAddress] => {
+          val s = new StringBuffer()
+          l.foreach(address => {
+            s.append((address.actorRef !! Status).get.toString() + "\n")
+          })
+          text.setText(s.toString())
+          frame.invalidate()
+          frame.validate()
+          frame.repaint()
+          val refreshAgain: Runnable = new Runnable() {
+            def run() {
+              self ! "REFRESH"
+            }
+          }
+          Scheduler.scheduleOnce(refreshAgain, 500L, TimeUnit.MILLISECONDS)
+        }
+      }
+    }
+  }
+}
+
 case class AddTestBuyer(name: String)
-case class BidOnSomething(buyer:ActorRef)
+case class BidOnSomething(buyer: ActorRef)
 
 class BuyerDriver extends Actor {
   val creationServers = (Actor.remote.actorFor("creation", "localhost", 2666), Actor.remote.actorFor("creation", "localhost", 2666))
@@ -42,26 +77,26 @@ class BuyerDriver extends Actor {
     case AddTestBuyer(name) => {
       val f1 = creationServers._1 ? RegisterBuyer(name)
       f1.onResult {
-        case a:ActorAddress => {
-          println("buyer registered:"+a.key)
+        case a: ActorAddress => {
           scheduleBid(a.actorRef)
         }
       }
     }
-    case BidOnSomething(buyer:ActorRef) => {
+    case BidOnSomething(buyer: ActorRef) => {
       buyer ! "RandomBid"
       scheduleBid(buyer)
     }
   }
-  
-  def scheduleBid(buyer:ActorRef) {
+
+  def scheduleBid(buyer: ActorRef) {
     buyer ! "getAuctions"
     val bidAgain: Runnable = new Runnable() {
-    def run() {
+      def run() {
         self ! BidOnSomething(buyer)
       }
     }
-  	Scheduler.scheduleOnce(bidAgain, 1L, TimeUnit.SECONDS)
+    val time = (math.random * Integer.MAX_VALUE % 1000).toLong
+    Scheduler.scheduleOnce(bidAgain, time, TimeUnit.MILLISECONDS)
   }
 }
 
@@ -77,7 +112,6 @@ class VendorDriver extends Actor {
       val f1 = creationServers._1 ? RegisterVendor(name)
       f1.onResult {
         case a: ActorAddress => {
-          println("vendor registered:" + a.key)
           val vendor = a.actorRef
           self ! OpenAuction(vendor)
         }
@@ -93,7 +127,6 @@ class VendorDriver extends Actor {
       Scheduler.scheduleOnce(closeAuction, 3L, TimeUnit.SECONDS)
     }
     case CloseAuction(vendor) => {
-      println("closing all auctions")
       vendor ! "CloseAll"
       self ! OpenAuction(vendor)
     }
