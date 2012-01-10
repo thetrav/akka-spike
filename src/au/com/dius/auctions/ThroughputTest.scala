@@ -19,22 +19,27 @@ object ThroughputTest {
 
     val vendorDriver = Actor.actorOf[VendorDriver].start()
 
-    (1 to 100).foreach (i => {
-    	vendorDriver ! AddTestVendor("Vendor"+i)
+    (1 to 5).foreach(i => {
+      vendorDriver ! AddTestVendor("Vendor" + i)
     })
 
     val buyerDriver = Actor.actorOf[BuyerDriver].start()
-    
-    val firstNames = List("Travis","John","Alan", "Tony", "Martin", "Simon", "Luke", "John", "Tim", "Michael")
+
+    val firstNames = List("Travis", "John", "Alan", "Tony", "Martin", "Simon", "Luke", "John", "Tim", "Michael")
     val lastNames = List("Dixon", "Fowler", "Jones", "Alberts", "Kroft", "Peyton Jones", "Moris", "Eisenhower", "Kennedy", "Obama")
-    (0 to 9).foreach (i => {
-      (0 to 9).foreach (j => {
-	    buyerDriver ! AddTestBuyer(firstNames(i)+" "+lastNames(j))
-	    })
+    (0 to 9).foreach(i => {
+      (0 to 9).foreach(j => {
+        buyerDriver ! AddTestBuyer(firstNames(i) + " " + lastNames(j))
+      })
     })
     val refresher = Actor.actorOf(new ScreenRefresher(frame, text)).start()
-    refresher ! "REFRESH"
-    
+    val refreshAgain: Runnable = new Runnable() {
+      def run() {
+        refresher ! "REFRESH"
+      }
+    }
+    Scheduler.schedule(refreshAgain, 1L, 200L,TimeUnit.MILLISECONDS)
+
     frame.setVisible(true)
   }
 }
@@ -50,18 +55,12 @@ class ScreenRefresher(frame: JFrame, text: JTextArea) extends Actor {
         case l: List[ActorAddress] => {
           val s = new StringBuffer()
           l.foreach(address => {
-            s.append((address.actorRef !! Status).get.toString() + "\n")
+            s.append((address.actorRef !! Status).toString() + "\n")
           })
           text.setText(s.toString())
           frame.invalidate()
           frame.validate()
           frame.repaint()
-          val refreshAgain: Runnable = new Runnable() {
-            def run() {
-              self ! "REFRESH"
-            }
-          }
-          Scheduler.scheduleOnce(refreshAgain, 500L, TimeUnit.MILLISECONDS)
         }
       }
     }

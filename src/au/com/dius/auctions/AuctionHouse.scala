@@ -14,12 +14,12 @@ class AuctionHouse extends Actor {
 
   def receive = {
     case a:ActorAddress => {
-      println("new lot accepted:"+a.key)
+//      println("new lot accepted:"+a.key)
       auctions += a.key -> a
       a.actorRef ! Open
     }
     case Sold(key, amount, buyer) => {
-      println("lot: "+key + " sold to "+buyer+" for "+amount)
+//      println("lot: "+key + " sold to "+buyer+" for "+amount)
       oldAuctions = (key, amount, buyer) :: oldAuctions
       auctions -= key
     }
@@ -38,7 +38,7 @@ class AuctionHouse extends Actor {
 
 object AuctionHouse {
   def main(args: Array[String]) {
-    println("starting auction house server")
+//    println("starting auction house server")
     Actor.remote.start(args(0), Integer.parseInt(args(1)))
     Actor.actorOf[AuctionHouse].start()
   }

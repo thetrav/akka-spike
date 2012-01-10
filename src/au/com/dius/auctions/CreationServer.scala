@@ -25,14 +25,14 @@ class CreationServer(host:String, port:Int, auctionHouseHost:String, auctionHous
   
   def receive = {
     case RegisterVendor(name:String) => {
-      println("new vendor registered: "+name)
+//      println("new vendor registered: "+name)
       val key = nextId() + " - " + name
       val vendorLocal = Actor.actorOf(new Vendor(key, name, self)).start()
       Actor.remote.register(key, vendorLocal)
       self.reply(ActorAddress(key, host, port))
     }
     case RegisterBuyer(name:String) => {
-      println("new buyer registered: "+name)
+//      println("new buyer registered: "+name)
       val key = nextId() + " - " + name
       val buyer = Actor.actorOf(new Buyer(key, name, auctionHouse)).start()
       Actor.remote.register(key, buyer)

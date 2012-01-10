@@ -18,9 +18,9 @@ class Auction(id:String,
         currentAmount = newAmount
         currentBuyer = Some(newBuyer)
         currentName = Some(newName)
-        println("bid from " + newName + " of amount " + newAmount + " is TOP")
+//        println("bid from " + newName + " of amount " + newAmount + " is TOP")
       } else {
-        println("bid from " + newName + " of amount " + newAmount + " failed")
+//        println("bid from " + newName + " of amount " + newAmount + " failed")
       }
     }
     case Close => {
